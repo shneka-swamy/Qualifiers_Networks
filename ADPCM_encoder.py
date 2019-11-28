@@ -16,7 +16,6 @@ def send_sample_encoder(codec, check_list):
 
 	for i in range(1, len(check_list)):
 		send_list = ADPCM_encoder(codec, check_list[i], send_list)
-		#print(send_list)
 		final_file.append(send_list[2])
 
 	return final_file
@@ -154,9 +153,7 @@ def send_sample_decoder(codec, check_list):
 def ADPCM_decoder(codec, code, send_list):
 	predsample = send_list[0]
 	index = send_list[1]
-
 	step = gv.StepSizeTable[index]
-
 	diffq = inverse_quantizer(codec, code, step)
 	predsample = get_predicted_value(codec, predsample, code, diffq)
 	index = get_index_value(codec, index, code)
@@ -165,37 +162,50 @@ def ADPCM_decoder(codec, code, send_list):
 
 	return send_list
 
+def create_message(data):
+	length = 0
+	send_list = []
+	string = ''
+	i = 0
 
-# Find the number of 100 bytes packets and print it
-def main():
+	for e in data:
+		length += len(str(e)) + 1
 
-    rf = wave.open(sys.argv[1], 'rb')
+		if i==0:
+			string = str(e)
+			i = 1
 
-    p = pyaudio.PyAudio()
+		elif length <=80:
+			string = string +' '+str(e)
 
-    data = rf.readframes(CHUNK)
+		else:
+			send_list.append(string)
+			del(string)
+			length = len(str(e))
+			string = str(e)
 
-    print(len(data))
+	if length != 0:
+		send_list.append(string)
 
-    codec_1 = 2
-    codec_2 = 3
-    codec_3 = 4
+	return send_list
 
-
-    converted_file_1 = send_sample_encoder(codec_1, data)
-   
-    converted_file_2 = send_sample_encoder(codec_2, data)
-
-
-    converted_file_3 = send_sample_encoder(codec_3, data)
-
-
-    original_file = send_sample_decoder(codec_1, converted_file_1)
-    print(len(original_file))
-    print(original_file)
+# These are the key functions to be used from this program. Must be imported and used from another program
+def run_encoder(file, codec):
+	rf = wave.open(file,'rb')
+	p = pyaudio.PyAudio()
+	CHUNK = 1024
+	data = rf.readframes(CHUNK)
+	converted_file = send_sample_encoder(codec, data)
+	send_list = create_message(converted_file)
+	
+	# Create Packet with the converted file and send the file that needs to be sent
+	return send_list
 
 
+def run_decoder(received_list, codec):
+	converted_file = list(map(int, " ".join(received_list).split()))
+	original_file = send_sample_decoder(2, converted_file)
+
+	return original_file
 
 
-if __name__ == '__main__':
-	main()
