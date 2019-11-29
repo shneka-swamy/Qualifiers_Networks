@@ -1,5 +1,7 @@
 from digi.xbee.devices import *
 import time
+import send_message as sm
+import Quality_check as qc
 
 # Edit the code for multiple destiantions (can be implemented later)
 
@@ -151,11 +153,7 @@ class RouteFormation:
 		device.send_data(remote_device, self.rrep)
 
 	def send_message(self, device, remote_device, destination):
-		device.send_data(remote_device, destination)
-		device.send_data(remote_device, "Hello World")
-		device.send_data(remote_device, "Finally single hop worked")
-		device.send_data(remote_device, "How should I integrate")
-		device.send_data(remote_device, "TRY")
+		sm.send_message(True, device, remote_device, destiantion, 0, 0, 0)
 
 	# Use a call back function instead ??		
 	def sendReply(self, device):
@@ -185,19 +183,32 @@ class RouteFormation:
 							msg = message.data.decode().split()
 							final_message.append(msg)
 
-							if len(msg) == 1:
+							if len(msg) == 4 and msg[0] == 'f':
 								print("Finished Receving data")
 								break
 
 					# Check if the device is the final destination
+					# If it is check the final quality
+
+					# This is the actual audio data
+					new_list = final_message[:-4]
+					# Check the quality
+					quality_list = final_message[-4:-1]
+
 					if device.get_64bit_addr() == address[0]:
 						print("Message received at the receiver end")
+						# This is the actual audio data
+						print(quality_list)
+						qc.QualityCheck(quality_list[0], quality_list[1], quality_list[2])
+
+
 					# Check in the table and transfer the information 
 					else:
 						value = self.search_table(dest)
 						if value == 0:
 							print("Error in path")
 						else:
+							sm.send_message(False, device, value, dest, quality_list[0], quality_list[1], quality_list[2])
 							self.send_message(device, value, dest)
 
 				# Helps identify the Route Request Packet
@@ -294,8 +305,8 @@ def main():
 	# print ("Press 'y' to declare as the source")	
 
 	#rreq.declareSource(device, "0013A20040B317F6")
-	#rreq.declareSource(device, "0013A2004102FC76")
-	rreq.declareSource(device, "0013A20040B31805")
+	rreq.declareSource(device, "0013A2004102FC76")
+	#rreq.declareSource(device, "0013A20040B31805")
 
 
 	device.close()

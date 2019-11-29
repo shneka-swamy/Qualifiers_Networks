@@ -3,21 +3,61 @@
 import ADPCM_encoder as ad
 from digi.xbee.devices import *
 import sys
-
+import time
 
 # Find the number of 100 bytes packets and print it
-def send_message(isSource, device, remote_device, destination):
+def send_message(isSource, device, remote_device, destination, dup, codec, initial_loss):
 
 	if isSource:
 		send_list = ad.run_encoder('first.wav', 2)
+		total_number = len(send_list)
+		packet_loss = 0
 
-	# Append the codec to the destinations side 
-	# enables decoding at the other end
-	device.send_data(remote_device, destination)
+	else:
+		total_number = round((1-initial_loss) * len(send_list))
+		packet_loss = round(initial_loss *  total_number)
+
+	# this message is required at the realy side for processing
+	try:
+		device.send_data(remote_device, destination)
+	except (TimeoutException, XBeeException) as e:
+		time.sleep(0.1)
+		continue
+
+	dup_ratio = 0
+	i = 0
+	prev = 0 
 
 	for send in send_list:
-		device.send_data(remote_device, send)
+		try:
+			device.send_data(remote_device, send)
+			i += 1
 
+		# Keep resending the packet till the duplication ratio is less.
+		# The data is repeated just once.
+		except (TimeoutException, XBeeException) as e:
+			print("Dropped packet number %s" %i)	
+			time.sleep(0.08)
+
+			if prev != i:
+				prev = i
+				dup_ratio += 1
+				if (dup_ratio/total_number ) <= dup:
+					continue
+				else:
+					packet_loss += 1
+					break
+			else:
+				packet_loss += 1
+				break
+
+	# this message is required at the realy side for processing
+	final_list = str(dup_ratio/total_number) + " "+ str(packet_loss/total_number)+ " "+ str(codec)+"f"
+ 	try:
+		device.send_data(remote_device, final_list)
+	except (TimeoutException, XBeeException) as e:
+		time.sleep(0.1)
+		continue
 
 def receive_message(received_list, codec):
 	original_file = ad.run_decoder(send_list, codec)
