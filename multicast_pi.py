@@ -299,7 +299,7 @@ def main():
 	rreq.createTable(device)
 
 	# This function must be called when not set as a source
-	#rreq.sendReply(device)
+	rreq.sendReply(device)
 
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
