@@ -18,11 +18,12 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 		packet_loss = round(initial_loss *  total_number)
 
 	# this message is required at the realy side for processing
-	try:
-		device.send_data(remote_device, destination)
-	except (TimeoutException, XBeeException) as e:
-		time.sleep(0.1)
-		continue
+	while True:
+		try:
+			device.send_data(remote_device, destination)
+			break
+		except (TimeoutException, XBeeException) as e:
+			time.sleep(0.1)
 
 	dup_ratio = 0
 	i = 0
@@ -46,18 +47,18 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 					continue
 				else:
 					packet_loss += 1
-					break
 			else:
 				packet_loss += 1
-				break
 
 	# this message is required at the realy side for processing
 	final_list = str(dup_ratio/total_number) + " "+ str(packet_loss/total_number)+ " "+ str(codec)+"f"
- 	try:
-		device.send_data(remote_device, final_list)
-	except (TimeoutException, XBeeException) as e:
-		time.sleep(0.1)
-		continue
+	
+	while True:
+		try:
+			device.send_data(remote_device, final_list)
+			break
+		except (TimeoutException, XBeeException) as e:
+			time.sleep(0.1)
 
 def receive_message(received_list, codec):
 	original_file = ad.run_decoder(send_list, codec)
