@@ -29,8 +29,11 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 	i = 0
 	prev = 0 
 
+	print(len(send_list))
+
 	for send in send_list:
 		try:
+			print("Sending Packet")
 			device.send_data(remote_device, send)
 			i += 1
 

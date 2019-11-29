@@ -153,7 +153,7 @@ class RouteFormation:
 		device.send_data(remote_device, self.rrep)
 
 	def send_message(self, device, remote_device, destination):
-		sm.send_message(True, device, remote_device, destiantion, 0, 0, 0)
+		sm.send_message(True, device, remote_device, destination, 0, 0, 0)
 
 	# Use a call back function instead ??		
 	def sendReply(self, device):
@@ -178,12 +178,15 @@ class RouteFormation:
 					final_message = []
 					while True:
 						message = device.read_data()
+						i = 0
 
 						if message is not None:
 							msg = message.data.decode().split()
 							final_message.append(msg)
+							i += 1
+							print(i)
 
-							if len(msg) == 4 and msg[0] == 'f':
+							if len(msg) == 4 and msg[-1] == 'f':
 								print("Finished Receving data")
 								break
 
@@ -192,24 +195,29 @@ class RouteFormation:
 
 					# This is the actual audio data
 					new_list = final_message[:-4]
+
 					# Check the quality
 					quality_list = final_message[-4:-1]
+
+					# To get back the original message
+					#To convert to original audio
+					sm.receive_message(new_list, quality_list[2])
 
 					if device.get_64bit_addr() == address[0]:
 						print("Message received at the receiver end")
 						# This is the actual audio data
 						print(quality_list)
-						qc.QualityCheck(quality_list[0], quality_list[1], quality_list[2])
+						print(qc.QualityCheck(quality_list[0], quality_list[1], quality_list[2]))
+						print(qc.Injection_Rate(quality_list[0],quality_list[2]))
 
 
 					# Check in the table and transfer the information 
 					else:
-						value = self.search_table(dest)
+						value = self.search_table(address[0])
 						if value == 0:
 							print("Error in path")
 						else:
-							sm.send_message(False, device, value, dest, quality_list[0], quality_list[1], quality_list[2])
-							self.send_message(device, value, dest)
+							sm.send_message(False, device, value, address[0], quality_list[0], quality_list[1], quality_list[2])
 
 				# Helps identify the Route Request Packet
 				# Once a request is got run a timer (must be added later)
@@ -238,6 +246,8 @@ class RouteFormation:
 							self.generateRREP(device, remote_device, string_val)
 						else:
 							print("wait")
+							str_val = string_val.copy()
+							self.interTable(str_val)
 							self.updateTable_request(device, string_val)
 							self.SeqenceNo += 1
 							string_val[5] = str(device.get_64bit_addr())
@@ -289,7 +299,7 @@ def main():
 
 
 	# To open the Xbee device and to work with it
-	device = XBeeDevice("/dev/ttyUSB0", 115200)
+	device = XBeeDevice("/dev/ttyS0", 115200)
 	device.open()
 	print(device.get_power_level())
 
@@ -299,13 +309,13 @@ def main():
 	rreq.createTable(device)
 
 	# This function must be called when not set as a source
-	rreq.sendReply(device)
+	#rreq.sendReply(device)
 
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
 	#rreq.declareSource(device, "0013A20040B317F6")
-	#rreq.declareSource(device, "0013A2004102FC76")
+	rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
 
