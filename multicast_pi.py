@@ -193,7 +193,7 @@ class RouteFormation:
 								i += 1
 								print(i)
 
-							if len(msg) s== 4 and msg[-1] == 'f':
+							if len(msg) == 4 and msg[-1] == 'f':
 								print("Finished Receving data")
 								break
 

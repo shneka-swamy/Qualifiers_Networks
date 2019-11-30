@@ -1,5 +1,6 @@
 from digi.xbee.devices import *
 import time
+from threading import Event
 
 # Edit the code for multiple destiantions (can be implemented later)
 
@@ -20,6 +21,7 @@ class RouteFormation:
 		self.rem = []
 		self.neighbourcount = 0
 		self.rrep = ""
+		self.myAddress = str(device.get_64bit_addr())
 
 	# <Sequence Number, Hop number, Degree, Source ID, Intermediate ID, Destination ID, Expiry Time>
 	def createTable(self, device):
@@ -31,7 +33,7 @@ class RouteFormation:
 			print("No neighbour found so far try after sometime")
 		else:
 			for i in range(0, self.neighbourcount):
-				self.table.append([str(self.SeqenceNo), str(1), str(self.neighbourcount), str(device.get_64bit_addr()),self.rem[i],self.rem[i], 5])
+				self.table.append([str(self.SeqenceNo), str(1), str(self.neighbourcount),self.myAddress,self.rem[i],self.rem[i], 5])
 		
 		#print(self.table) 
 
@@ -46,8 +48,8 @@ class RouteFormation:
 			# If the destination is the same 
 			# This happens when the sequence number is greater or the hop number is lower
 			else:
-				if message[5] == block[5] and (int(block[0]) < int(message[0]) and int(block[1])  > int(message[1])):
-					block[:] = message[0:6] 
+				if message[6] == block[5] and (int(block[0]) < int(message[1]) and int(block[1])  > int(message[2])):
+					block[:] = message[1:7] 
 					block.append(5)
 		#print("Table Updated at Reply:")
 		#print(self.table)
@@ -61,12 +63,12 @@ class RouteFormation:
 			# If the destiantion needs to be chaged
 			# This happens when the sequence number is greater or the block number is lower
 			else:
-				if message[4] == block[5] and (int(block[0]) <  int(message[1]) or int(block[1]) > int(message[2])):
+				if message[5] == block[5] and (int(block[0]) <  int(message[2]) or int(block[1]) > int(message[3])):
 					print("Actually updating table")
-					block[:] = message[1:4]
-					block.append(str(device.get_64bit_addr()))
+					block[:] = message[2:5]
+					block.append(self.myAddress)
+					block.append(message[6])
 					block.append(message[5])
-					block.append(message[4])
 					block.append(5)
 
 		#print("Table Updated at Request:")
@@ -77,21 +79,27 @@ class RouteFormation:
 		print(self.table)
 		print("Checking the values")
 		print(dest)
+
+		# Generate a list of list with the destination and the intermediate node
+		final_list = []
+
 		for value in self.table:
-			print(value[5])
-			if(value[5] == dest):
-				return value[4]
-		return 0
+			print(value[6])
+
+			for desitnation in dest:
+				if(value[6] == destination):
+					final_list.append(list(destiantion, value[5]))
+		return final_list
  
 	def generateRREQ(self, device, dest):
 		
 		degree = self.neighbourcount
 
-		self.rreq += str(self.Id) + ' ' + str(self.SeqenceNo) + ' ' + str(1) + ' ' + str(degree) + ' '
-		self.rreq += str(device.get_64bit_addr()) + ' ' + str(device.get_64bit_addr()) + ' '
+		self.rreq += str('RREQ ') + str(self.Id) + ' ' + str(self.SeqenceNo) + ' ' + str(1) + ' ' + str(degree) + ' '
+		self.rreq += self.myAddress + ' ' + self.myAddress+ ' '
 		self.rreq += dest
-		#print("<Sequence Number, Broadcast ID, Hop Number, Degree, Source ID, InterSource, Destintion ID>")
-		#print(self.rreq)
+		print("<Sequence Number, Broadcast ID, Hop Number, Degree, Source ID, InterSource, Destintion ID>")
+		print(self.rreq)
 		
 		# Drop the packet when duplicated and when multiple path request are made at the same time.
 		self.interTable(self.rreq.split())
@@ -146,9 +154,9 @@ class RouteFormation:
 		#degree = self.neighbourcount
 		# Do not change the hop count and the degree when sending back the reply.
 
-		self.rrep += str(self.SeqenceNo) + ' ' + message[2] + ' ' + message[3] + ' '
-		self.rrep += message[4] + ' ' + str(device.get_64bit_addr()) + ' '
-		self.rrep += message[6]
+		self.rrep += str('RREP ')+ str(self.SeqenceNo) + ' ' + message[3] + ' ' + message[4] + ' '
+		self.rrep += message[5] + ' ' + self.myAddress + ' '
+		self.rrep += message[7]
 
 		device.send_data(remote_device, self.rrep)
 
@@ -169,8 +177,8 @@ class RouteFormation:
 				print("Printing received data")
 				print(string_val)
 
-				if len(string_val) == 1:
-					address = string_val
+				if string_val[0] == 'MSG':
+					address = string_val[1:]
 					print("information is received, Waiting for data:")
 					print(address)
 					
@@ -178,89 +186,125 @@ class RouteFormation:
 					final_message = []
 					while True:
 						message = device.read_data()
+						msg = message.data.decode().split()
 						i = 0
 
-						if message is not None:
-							msg = message.data.decode().split()
-							final_message.append(msg)
+						if len(msg) == 2 and (msg[0] == 'PING' or msg[0] == "CHCK"):
+								pass
+						elif msg[0] == 'RREQ' or msg[0] == 'RREP':
+							pass
+						elif len(msg) == 4 and msg[-1] == 'f':
+							print("Finished Receving data")
+							break
+						else:
+							final_message += msg
 							i += 1
 							print(i)
-
-							if len(msg) == 4 and msg[-1] == 'f':
-								print("Finished Receving data")
-								break
-
-					# Check if the device is the final destination
-					# If it is check the final quality
 
 					# This is the actual audio data
 					new_list = final_message[:-4]
 
 					# Check the quality
 					quality_list = final_message[-4:-1]
-
-					# To get back the original message
+					
 					#To convert to original audio
-					sm.receive_message(new_list, quality_list[2])
+					sm.receive_message(new_list, int(quality_list[2]))
 
-					if device.get_64bit_addr() == address[0]:
+					my_message = False
+
+					if self.myAddress in address:
+						
 						print("Message received at the receiver end")
-						# This is the actual audio data
+						# This is the actual audio quality data
 						print(quality_list)
-						qc.QualityCheck(quality_list[0], quality_list[1], quality_list[2])
-
+						qc.QualityCheck(float(quality_list[0]), float(quality_list[1]), int(quality_list[2]))
+						address.remove(self.myAddress)
+						my_message = True
 
 					# Check in the table and transfer the information 
-					else:
-						value = self.search_table(dest)
-						if value == 0:
+					value = self.search_table(address)
+						if len(final_list) == 0 and my_message == False:
 							print("Error in path")
+						elif len(final_list) == 0 and my_message == True:
+							print("I am the only receiver in the path")
 						else:
-							sm.send_message(False, device, value, dest, quality_list[0], quality_list[1], quality_list[2])
+							for common_path in value:
+								sm.send_message(False, device, common_path[1], common_path[0], quality_list[0], quality_list[1], quality_list[2])
 				
 
 				# Helps identify the Route Request Packet
 				# Once a request is got run a timer (must be added later)
-				elif len(string_val) == 7:
-					duplicate_flag = False
+				elif string_val[0] == 'RREQ':
 						
-					# This condition checks if the same message request is reaching the node. 
-					# The value 0 can be changed after the intermediate node is formed.
-					for list in self.inter_table:
-
-						if list[4] == string_val[4] and list[0] == string_val[0]:
-							print("Drop the message, extra information received")
-							duplicate_flag = True
-							break 
-
-					if duplicate_flag == False:
-
-						# To enable checking hops remove the message coming from the source:
-					
-						if str(device.get_64bit_addr()) == string_val[6]:
-							if string_val[5] == string_val[4]:
+						flag = False
+						if self.myAddress in string_val[7:]:
+							if string_val[6] == string_val[5]:
 								print("Leaving the packet coming directly from the source")
-							
+						
 							else:
-								self.interTable(string_val)
-								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (string_val[5]))
+								# Is the message already in the list
+								for list in self.inter_table:
+									# Already a path is got. Check the value with the previous path 
+									# First preference is given to hop value and then to congestion domain
+									if list[5] == string_val[5] and list[1] == string_val[1]:
+										change_flag = False
+										
+										if new_value[7:].count('1') < (string_val[7:].count('1') + 1):
+											if(new_value[3]) >= (string_val[3] - 1):
+												if (new_value[4]) > string_val[4]:
+													new_value = string_val.copy()
+													change_flag = True
+
+										elif (new_value[3]) >= (string_val[3] - 1):
+											if (new_value[4]) > string_val[4]:
+													new_value = string_val.copy()
+													change_flag = True
+										
+										if change_flag = True:
+											for i in range(7, len(string_val)):
+												if (new_value[i] == self.myAddress):
+												new_value[i] = str(1)
+
+
+										flag = True
+
+
+								if flag == False:
+									self.interTable(string_val)
+									new_value = string_val.copy()
+
+									for i in range(7, len(string_val)):
+										if (new_value[i] == self.myAddress):
+											new_value[i] = str(1)
+
+									Event().wait(10)
+
+								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (new_value[6]))
 								self.SeqenceNo += 1
 								# Add the source as destianation to the table
-								self.updateTable_request(device, string_val)
+								self.updateTable_request(device, new_value)	
+
+								# There are still destinations to be found
+								if new_value[7:].count('1') != len(new_value) - 7:
+									device.send_data_broadcast(' '.join(new_value))
+									self.SeqenceNo += 1
 
 								print("Generating Reply")
-								self.generateRREP(device, remote_device, string_val)
+								self.SeqenceNo += 1
+								new_value = new_value[1:6]
+								new_value.append(self.myAddress)
+								print(new_value)
+								self.generateRREP(device, remote_device, new_value)
 						else:
 							print("wait")
 							print(string_val)
-
 							str_val = string_val.copy()
 							self.interTable(str_val)
 							self.updateTable_request(device, string_val)
 							self.SeqenceNo += 1
-							string_val[5] = str(device.get_64bit_addr())
-							string_val[3] = str(int(string_val[3]) + self.neighbourcount)
-							string_val[2] = str(int(string_val[2]) + 1)
+							string_val[6] = self.myAddress
+							string_val[4] = str(int(string_val[4]) + (self.neighbourcount - 1))
+							string_val[3] = str(int(string_val[3]) + 1)
 							print("Checking the values before sending")
 							print(self.inter_table)
 							device.send_data_broadcast(' '.join(string_val))
@@ -268,7 +312,7 @@ class RouteFormation:
 
 				# When the value of the message received is 6 a reply message is received.
 				# Look at the intermediate table and send the message through the intermediate node.
-				elif len(string_val) == 6:
+				elif string_val[0] == 'RREP':
 					print("Processing Reply:")
 					path_flag = True
 
@@ -278,7 +322,7 @@ class RouteFormation:
 
 					for member in self.inter_table:
 						print("Check the graph")
-						if member[6] == string_val[5] and member[4] == string_val[3]: 
+						if member[7] == string_val[6] and member[5] == string_val[4]: 
 							self.updateTable_reply(string_val)
 							print("Printing intermediate table for verification")
 							print(self.inter_table)
@@ -289,18 +333,31 @@ class RouteFormation:
 						print("Error. Wrong reply received, node not in path")
 					
 					else:
-						if str(device.get_64bit_addr()) == string_val[3]:
+						maintain_list = []
+						if self.myAddress == string_val[4]:
 
-							remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (string_val[4]))
-							print("Send Data - Path Set")
-							# First send the destination address and then send the message.
-							self.send_message(device, remote_device, string_val[5])
+							if len(maintain_list) == 0:
+								maintain_list.append(string_val)
+								Event().wait(10)	
+
+							if maintain_list[0][5] == maintain_list[1][5]:
+								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain_list[0][5]))
+								print("Send Data - Path Set")
+								# First send the destination address and then send the message.
+								self.send_message(device, remote_device, maintain_list[0][6])
+							else:
+								for maintain in maintain_list:
+									remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maitain[5]))
+									print("Send Data - Path Set")
+									# First send the destination address and then send the message.
+									self.send_message(device, remote_device, maintain[6])
+
 							
 						else:
 							print("Forward not the source")
 							# Change the intermediate ID
-							string_val[4] = str(device.get_64bit_addr())
-							remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string(member[5]))
+							string_val[5] = self.myAddress
+							remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string(member[6]))
 
 							print(self.inter_table)
 							print(member)
@@ -329,7 +386,7 @@ def main():
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
-	#rreq.declareSource(device, "0013A20040B317F6")
+	rreq.declareSource(device, ['0013A20040B317F6', '0013A2004102FC76'])
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
