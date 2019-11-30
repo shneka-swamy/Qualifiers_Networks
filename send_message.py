@@ -14,14 +14,15 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 		print(total_number)
 		packet_loss = 0
 
-	else:
+	else: 		
 		total_number = round((1-initial_loss) * len(send_list))
 		packet_loss = round(initial_loss *  total_number)
 
 	# this message is required at the realy side for processing
 	while True:
 		try:
-			device.send_data(remote_device, destination)
+			msg = "MSG " + destination
+			device.send_data(remote_device, msg)
 			break
 		except (TimeoutException, XBeeException) as e:
 			time.sleep(0.1)

@@ -86,11 +86,11 @@ class RouteFormation:
 		final_list = []
 
 		for value in self.table:
-			print(value[6])
+			print(value[5])
 
-			for desitnation in dest:
-				if(value[6] == destination):
-					final_list.append(list(destiantion, value[5]))
+			for destination in dest:
+				if(value[5] == destination):
+					final_list.append(list(destination, value[4]))
 		return final_list
  
 	def generateRREQ(self, device, dest):
@@ -390,11 +390,10 @@ def main():
 
 
 	# To open the Xbee device and to work with it
-<<<<<<< HEAD
+
 	device = XBeeDevice("/dev/ttyUSB2", 115200)
-=======
-	device = XBeeDevice("/dev/ttyS0", 115200)
->>>>>>> 2b76a39dee6cf18a4e070b8c30e5afd9af868b7f
+
+
 	device.open()
 	print(device.get_power_level())
 
@@ -404,13 +403,13 @@ def main():
 	rreq.createTable(device)
 
 	# This function must be called when not set as a source
-	rreq.sendReply(device)
+	#rreq.sendReply(device)
 
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
 	#rreq.declareSource(device, ['0013A20040B317F6', '0013A2004102FC76'])
-	#rreq.declareSource(device, ['0013A200419B587E'])
+	rreq.declareSource(device, ['0013A200419B587E'])
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
