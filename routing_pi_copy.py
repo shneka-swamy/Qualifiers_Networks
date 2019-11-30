@@ -381,7 +381,7 @@ def main():
 
 
 	# To open the Xbee device and to work with it
-	device = XBeeDevice("/dev/ttyUSB0", 115200)
+	device = XBeeDevice("/dev/ttyS0", 115200)
 	device.open()
 	print(device.get_power_level())
 
@@ -391,13 +391,13 @@ def main():
 	rreq.createTable(device)
 
 	# This function must be called when not set as a source
-	#rreq.sendReply(device)
+	rreq.sendReply(device)
 
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
 	#rreq.declareSource(device, ['0013A20040B317F6', '0013A2004102FC76'])
-	rreq.declareSource(device, ['0013A200419B587E'])
+	#rreq.declareSource(device, ['0013A200419B587E'])
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
