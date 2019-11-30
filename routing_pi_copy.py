@@ -10,7 +10,7 @@ class RouteFormation:
 	# The route request uses the following message pattern to set up communication
 	# Source Request is <Broadcast ID, Sequence Number , Hop Number, Degree, Source ID, Intermediate ID , Destination ID (number can vary)>
 	# Route Reply is of the form <Sequence Number, Hop Number, Degree, Source, Intermediate, Destination >
-	def __init__(self):
+	def __init__(self, device):
 		self.rreq = ""
 		self.isSource = False
 		self.SeqenceNo = 0
@@ -97,7 +97,7 @@ class RouteFormation:
 
 		self.rreq += str('RREQ ') + str(self.Id) + ' ' + str(self.SeqenceNo) + ' ' + str(1) + ' ' + str(degree) + ' '
 		self.rreq += self.myAddress + ' ' + self.myAddress+ ' '
-		self.rreq += dest
+		self.rreq += ' '.join(dest)
 		print("<Sequence Number, Broadcast ID, Hop Number, Degree, Source ID, InterSource, Destintion ID>")
 		print(self.rreq)
 		
@@ -221,8 +221,8 @@ class RouteFormation:
 						address.remove(self.myAddress)
 						my_message = True
 
-					# Check in the table and transfer the information 
-					value = self.search_table(address)
+						# Check in the table and transfer the information 
+						value = self.search_table(address)
 						if len(final_list) == 0 and my_message == False:
 							print("Error in path")
 						elif len(final_list) == 0 and my_message == True:
@@ -260,10 +260,10 @@ class RouteFormation:
 													new_value = string_val.copy()
 													change_flag = True
 										
-										if change_flag = True:
+										if change_flag == True:
 											for i in range(7, len(string_val)):
 												if (new_value[i] == self.myAddress):
-												new_value[i] = str(1)
+													new_value[i] = str(1)
 
 
 										flag = True
@@ -371,17 +371,17 @@ def main():
 
 
 	# To open the Xbee device and to work with it
-	device = XBeeDevice("/dev/ttyUSB1", 115200)
+	device = XBeeDevice("/dev/ttyUSB0", 115200)
 	device.open()
 	print(device.get_power_level())
 
 	# Create an object for sending Route Request for a message
 	# In the beginning of the program - do the following 
-	rreq = RouteFormation()
+	rreq = RouteFormation(device)	
 	rreq.createTable(device)
 
 	# This function must be called when not set as a source
-	rreq.sendReply(device)
+	#rreq.sendReply(device)
 
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
