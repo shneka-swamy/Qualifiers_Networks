@@ -299,11 +299,8 @@ def main():
 
 
 	# To open the Xbee device and to work with it
-<<<<<<< HEAD
 	device = XBeeDevice("/dev/ttyUSB4", 115200)
-=======
-	device = XBeeDevice("/dev/ttyS0", 115200)
->>>>>>> e447811c793d4690409cfa3893aa859ee7750abb
+	
 	device.open()
 	print(device.get_power_level())
 
@@ -318,11 +315,8 @@ def main():
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
-<<<<<<< HEAD
-	rreq.declareSource(device, "0013A20040B317F6")
-=======
+
 	#rreq.declareSource(device, "0013A20040B317F6")
->>>>>>> e447811c793d4690409cfa3893aa859ee7750abb
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
