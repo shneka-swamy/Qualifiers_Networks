@@ -48,7 +48,7 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 			if prev != i:
 				prev = i
 				dup_ratio += 1
-				if (dup_ratio/total_number ) <= dup:
+				if (dup_ratio/total_number) <= dup:
 					continue
 				else:
 					packet_loss += 1
@@ -69,9 +69,5 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 
 def receive_message(received_list, codec):
 	original_file = ad.run_decoder(received_list, codec)
-	print(original_file)
 
 
-
-if __name__ == '__main__':
-	main()

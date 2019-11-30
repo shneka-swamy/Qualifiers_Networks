@@ -153,7 +153,7 @@ class RouteFormation:
 		device.send_data(remote_device, self.rrep)
 
 	def send_message(self, device, remote_device, destination):
-		sm.send_message(True, device, remote_device, destination, 0, 2, 0)
+		sm.send_message(True, device, remote_device, destination, 0.0, 2, 0.0)
 
 	# Use a call back function instead ??		
 	def sendReply(self, device):
@@ -299,7 +299,7 @@ def main():
 
 
 	# To open the Xbee device and to work with it
-	device = XBeeDevice("/dev/ttyUSB2", 115200)
+	device = XBeeDevice("/dev/ttyUSB4", 115200)
 	device.open()
 	print(device.get_power_level())
 
@@ -314,8 +314,8 @@ def main():
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
-	#rreq.declareSource(device, "0013A20040B317F6")
-	rreq.declareSource(device, "0013A2004102FC76")
+	rreq.declareSource(device, "0013A20040B317F6")
+	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
 

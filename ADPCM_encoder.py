@@ -195,6 +195,7 @@ def run_encoder(file, codec):
 	p = pyaudio.PyAudio()
 	CHUNK = 1024
 	data = rf.readframes(CHUNK)
+
 	converted_file = send_sample_encoder(codec, data)
 	send_list = create_message(converted_file)
 	
@@ -203,9 +204,9 @@ def run_encoder(file, codec):
 
 
 def run_decoder(received_list, codec):
-	converted_file = list(map(int,received_list))
+	#converted_file = list(map(int,received_list))
+	converted_file = list(map(int," ".join(received_list).split()))
 	original_file = send_sample_decoder(codec, converted_file)
 
 	return original_file
-
 
