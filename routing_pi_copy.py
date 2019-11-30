@@ -86,7 +86,7 @@ class RouteFormation:
 		final_list = []
 
 		for value in self.table:
-			print(value[5])
+			print(value[5]
 
 			for destination in dest:
 				if(value[5] == destination):
@@ -295,7 +295,7 @@ class RouteFormation:
 								# There are still destinations to be found
 								if new_value[7:].count('1') != len(new_value) - 7:
 									new_value[6] = self.myAddress
-									new_value[4] = str(int(new_value[4])) + (self.neighbourcount-1)
+									new_value[4] = str(int(new_value[4]) + (self.neighbourcount-1))
 									new_value[3] = str(int(new_value[3]) + 1)
 
 									device.send_data_broadcast(' '.join(new_value))
@@ -306,7 +306,10 @@ class RouteFormation:
 								self.SeqenceNo += 1
 
 								new_value[0] = 'RREP '
-								new_value = new_value[0:6]
+								for i in range(1,5):
+									new_value[i] = new_value[i+1]
+
+								new_value.append(self.myAddress)
 								new_value.append(self.myAddress)
 								print(new_value)
 								self.generateRREP(device, remote_device, new_value)
@@ -400,7 +403,7 @@ def main():
 
 	# To open the Xbee device and to work with it
 
-	device = XBeeDevice("/dev/ttyUSB2", 115200)
+	device = XBeeDevice("/dev/ttyUSB0", 115200)
 
 
 	device.open()
