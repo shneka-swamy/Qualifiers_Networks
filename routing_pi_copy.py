@@ -90,7 +90,7 @@ class RouteFormation:
 
 			for destination in dest:
 				if(value[5] == destination):
-					final_list.append(list(destination, value[4]))
+					final_list.append([destination, value[4]])
 		return final_list
  
 	def generateRREQ(self, device, dest):
@@ -163,7 +163,7 @@ class RouteFormation:
 		device.send_data(remote_device, self.rrep)
 
 	def send_message(self, device, remote_device, destination):
-		sm.send_message(True, device, remote_device, destination, 0, 2, 0)
+		sm.send_message(True, device, remote_device, destination, 0, 2, 0, [])
 
 	# Use a call back function instead ??		
 	def sendReply(self, device):
@@ -233,7 +233,7 @@ class RouteFormation:
 						print("I am the only receiver in the path")
 					else:
 						for common_path in final_list:
-							sm.send_message(False, device, common_path[1], common_path[0], quality_list[0], quality_list[1], quality_list[2])
+							sm.send_message(False, device, common_path[1], common_path[0], float(quality_list[0]), float(quality_list[1]), int(quality_list[2]), new_list)
 				
 
 				# Helps identify the Route Request Packet

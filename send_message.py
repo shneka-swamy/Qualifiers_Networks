@@ -6,7 +6,7 @@ import sys
 import time
 
 # Find the number of 100 bytes packets and print it
-def send_message(isSource, device, remote_device, destination, dup, codec, initial_loss):
+def send_message(isSource, device, remote_device, destination, dup, codec, initial_loss, send_list):
 
 	if isSource:
 		send_list = ad.run_encoder('first.wav', codec)
@@ -15,7 +15,7 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 		packet_loss = 0
 
 	else: 		
-		total_number = round((1-initial_loss) * len(send_list))
+		total_number = round(len(send_list) / (1 - initial_loss))
 		packet_loss = round(initial_loss *  total_number)
 
 	# this message is required at the realy side for processing
