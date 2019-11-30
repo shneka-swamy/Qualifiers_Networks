@@ -182,11 +182,18 @@ class RouteFormation:
 
 						if message is not None:
 							msg = message.data.decode().split()
-							final_message += msg
-							i += 1
-							print(i)
 
-							if len(msg) == 4 and msg[-1] == 'f':
+							# Drop the message if some message requesting for path interferes
+							# Ping and check messages are sent to see if the path is available for communication
+							if len(msg) == 2 and (msg[0] == 'PING' or msg[0] == "CHCK"):
+								pass
+
+							else:
+								final_message += msg
+								i += 1
+								print(i)
+
+							if len(msg) s== 4 and msg[-1] == 'f':
 								print("Finished Receving data")
 								break
 
@@ -299,7 +306,7 @@ def main():
 
 
 	# To open the Xbee device and to work with it
-	device = XBeeDevice("/dev/ttyUSB4", 115200)
+	device = XBeeDevice("/dev/ttyUSB0", 115200)
 	
 	device.open()
 	print(device.get_power_level())
@@ -310,13 +317,13 @@ def main():
 	rreq.createTable(device)
 
 	# This function must be called when not set as a source
-	rreq.sendReply(device)
+	#rreq.sendReply(device)
 
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
 
-	#rreq.declareSource(device, "0013A20040B317F6")
+	rreq.declareSource(device, "0013A20040B317F6")
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
