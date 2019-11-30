@@ -182,7 +182,7 @@ class RouteFormation:
 
 						if message is not None:
 							msg = message.data.decode().split()
-							final_message.append(msg)
+							final_message += msg
 							i += 1
 							print(i)
 
@@ -195,20 +195,20 @@ class RouteFormation:
 
 					# This is the actual audio data
 					new_list = final_message[:-4]
+					print(new_list)
 
 					# Check the quality
 					quality_list = final_message[-4:-1]
 
 					# To get back the original message
 					#To convert to original audio
-					sm.receive_message(new_list, quality_list[2])
+					sm.receive_message(new_list, int(quality_list[2]))
 
-					if device.get_64bit_addr() == address[0]:
+					if str(device.get_64bit_addr()) == address[0]:
 						print("Message received at the receiver end")
 						# This is the actual audio data
-						print(quality_list)
-						print(qc.QualityCheck(quality_list[0], quality_list[1], quality_list[2]))
-						print(qc.Injection_Rate(quality_list[0],quality_list[2]))
+						print(qc.QualityCheck(float(quality_list[0]), float(quality_list[1]), int(quality_list[2])))
+						print(qc.Injection_Rate(float(quality_list[0]),int(quality_list[2])))
 
 
 					# Check in the table and transfer the information 
@@ -299,7 +299,11 @@ def main():
 
 
 	# To open the Xbee device and to work with it
+<<<<<<< HEAD
 	device = XBeeDevice("/dev/ttyUSB4", 115200)
+=======
+	device = XBeeDevice("/dev/ttyS0", 115200)
+>>>>>>> e447811c793d4690409cfa3893aa859ee7750abb
 	device.open()
 	print(device.get_power_level())
 
@@ -309,12 +313,16 @@ def main():
 	rreq.createTable(device)
 
 	# This function must be called when not set as a source
-	#rreq.sendReply(device)
+	rreq.sendReply(device)
 
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
+<<<<<<< HEAD
 	rreq.declareSource(device, "0013A20040B317F6")
+=======
+	#rreq.declareSource(device, "0013A20040B317F6")
+>>>>>>> e447811c793d4690409cfa3893aa859ee7750abb
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 

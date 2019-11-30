@@ -204,9 +204,15 @@ def run_encoder(file, codec):
 
 
 def run_decoder(received_list, codec):
+<<<<<<< HEAD
 	#converted_file = list(map(int,received_list))
 	converted_file = list(map(int," ".join(received_list).split()))
 	original_file = send_sample_decoder(codec, converted_file)
 
 	return original_file
+=======
+        converted_file = list(map(int,received_list))
+        original_file = send_sample_decoder(codec, converted_file)
+        return original_file
+>>>>>>> e447811c793d4690409cfa3893aa859ee7750abb
 
