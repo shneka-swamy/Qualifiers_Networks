@@ -96,6 +96,7 @@ class RouteFormation:
 	def generateRREQ(self, device, dest):
 		
 		degree = self.neighbourcount
+		self.Id += 1
 
 		self.rreq += str('RREQ ') + str(self.Id) + ' ' + str(self.SeqenceNo) + ' ' + str(1) + ' ' + str(degree) + ' '
 		self.rreq += self.myAddress + ' ' + self.myAddress+ ' '
@@ -198,6 +199,7 @@ class RouteFormation:
 							elif msg[0] == 'RREQ' or msg[0] == 'RREP':
 								pass
 							elif len(msg) == 4 and msg[-1] == 'f':
+								final_message += msg
 								print("Finished Receving data")
 								break
 							else:
@@ -232,6 +234,7 @@ class RouteFormation:
 					elif len(final_list) == 0 and my_message == True:
 						print("I am the only receiver in the path")
 					else:
+						print(quality_list)
 						for common_path in final_list:
 							sm.send_message(False, device, common_path[1], common_path[0], float(quality_list[0]), float(quality_list[1]), int(quality_list[2]), new_list)
 				
@@ -255,13 +258,13 @@ class RouteFormation:
 										change_flag = False
 										
 										if new_value[7:].count('1') < (string_val[7:].count('1') + 1):
-											if(new_value[3]) >= (string_val[3] - 1):
-												if (new_value[4]) > string_val[4]:
+											if int(new_value[3]) >= int(string_val[3] - 1):
+												if (int(new_value[4]) > int(string_val[4])) and (int(new_value[2])) < (int(string_val[2])):
 													new_value = string_val.copy()
 													change_flag = True
 
-										elif (new_value[3]) >= (string_val[3] - 1):
-											if (new_value[4]) > string_val[4]:
+										elif int(new_value[3]) >= int(string_val[3] - 1):
+											if int(new_value[4]) > int(string_val[4]) and (int(new_value[2])) < (int(string_val[2])) :
 													new_value = string_val.copy()
 													change_flag = True
 										
@@ -282,7 +285,7 @@ class RouteFormation:
 										if (new_value[i] == self.myAddress):
 											new_value[i] = str(1)
 
-									Event().wait(10)
+									Event().wait(2)
 
 								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (new_value[6]))
 								self.SeqenceNo += 1
@@ -291,13 +294,19 @@ class RouteFormation:
 
 								# There are still destinations to be found
 								if new_value[7:].count('1') != len(new_value) - 7:
+									new_value[6] = self.myAddress
+									new_value[4] = str(int(new_value[4])) + (self.neighbourcount-1)
+									new_value[3] = str(int(new_value[3]) + 1)
+
 									device.send_data_broadcast(' '.join(new_value))
+
 									self.SeqenceNo += 1
 
 								print("Generating Reply")
 								self.SeqenceNo += 1
 
-								new_value = new_value[1:6]
+								new_value[0] = 'RREP '
+								new_value = new_value[0:6]
 								new_value.append(self.myAddress)
 								print(new_value)
 								self.generateRREP(device, remote_device, new_value)
@@ -337,7 +346,7 @@ class RouteFormation:
 
 					for member in self.inter_table:
 						print("Check the graph")
-						if member[7] == string_val[6] and member[5] == string_val[4]: 
+						if string_val[6] in member[7:] and member[5] == string_val[4]: 
 							self.updateTable_reply(string_val)
 							print("Printing intermediate table for verification")
 							print(self.inter_table)
@@ -354,22 +363,22 @@ class RouteFormation:
 							if len(maintain_list) == 0:
 								maintain_list.append(string_val)
 								print(maintain_list)
-								Event().wait(10)	
+								Event().wait(2)	
 
-							# this considers the case of two nodes
-							#if maintain_list[0][5] == maintain_list[1][5]:
-							#	remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain_list[0][5]))
-							#	print("Send Data - Path Set")
-								# First send the destination address and then send the message.
-							#	self.send_message(device, remote_device, maintain_list[0][6])
-							#else:
-							for maintain in maintain_list:
-								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain[5]))
-								print(maintain[5])
-								print(maintain[6])
+							# this considers the case of two nodes talking to one common node
+							if maintain_list[0][5] == maintain_list[1][5]:
+								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain_list[0][5]))
 								print("Send Data - Path Set")
 								# First send the destination address and then send the message.
-								self.send_message(device, remote_device, maintain[6])
+								self.send_message(device, remote_device, maintain_list[0][6])
+							else:
+								for maintain in maintain_list:
+									remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain[5]))
+									print(maintain[5])
+									print(maintain[6])
+									print("Send Data - Path Set")
+									# First send the destination address and then send the message.
+									self.send_message(device, remote_device, maintain[6])
 
 							
 						else:
@@ -408,8 +417,8 @@ def main():
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
-	#rreq.declareSource(device, ['0013A20040B317F6', '0013A2004102FC76'])
-	rreq.declareSource(device, ['0013A200419B587E'])
+	rreq.declareSource(device, ['0013A20040B317F6', '0013A2004102FC76'])
+	#rreq.declareSource(device, ['0013A200419B587E'])
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
