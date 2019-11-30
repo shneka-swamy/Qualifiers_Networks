@@ -1,6 +1,8 @@
 from digi.xbee.devices import *
 import time
 from threading import Event
+import send_message as sm
+import Quality_check as qc
 
 # Edit the code for multiple destiantions (can be implemented later)
 
@@ -161,7 +163,7 @@ class RouteFormation:
 		device.send_data(remote_device, self.rrep)
 
 	def send_message(self, device, remote_device, destination):
-		sm.send_message(True, device, remote_device, destination, 0, 0, 0)
+		sm.send_message(True, device, remote_device, destination, 0, 2, 0)
 
 	# Use a call back function instead ??		
 	def sendReply(self, device):
@@ -186,20 +188,22 @@ class RouteFormation:
 					final_message = []
 					while True:
 						message = device.read_data()
-						msg = message.data.decode().split()
-						i = 0
 
-						if len(msg) == 2 and (msg[0] == 'PING' or msg[0] == "CHCK"):
+						if message is not None:
+							msg = message.data.decode().split()
+							i = 0
+
+							if len(msg) == 2 and (msg[0] == 'PING' or msg[0] == "CHCK"):
 								pass
-						elif msg[0] == 'RREQ' or msg[0] == 'RREP':
-							pass
-						elif len(msg) == 4 and msg[-1] == 'f':
-							print("Finished Receving data")
-							break
-						else:
-							final_message += msg
-							i += 1
-							print(i)
+							elif msg[0] == 'RREQ' or msg[0] == 'RREP':
+								pass
+							elif len(msg) == 4 and msg[-1] == 'f':
+								print("Finished Receving data")
+								break
+							else:
+								final_message += msg
+								i += 1
+								print(i)
 
 					# This is the actual audio data
 					new_list = final_message[:-4]
@@ -221,15 +225,15 @@ class RouteFormation:
 						address.remove(self.myAddress)
 						my_message = True
 
-						# Check in the table and transfer the information 
-						value = self.search_table(address)
-						if len(final_list) == 0 and my_message == False:
-							print("Error in path")
-						elif len(final_list) == 0 and my_message == True:
-							print("I am the only receiver in the path")
-						else:
-							for common_path in value:
-								sm.send_message(False, device, common_path[1], common_path[0], quality_list[0], quality_list[1], quality_list[2])
+					# Check in the table and transfer the information 
+					final_list = self.search_table(address)
+					if len(final_list) == 0 and my_message == False:
+						print("Error in path")
+					elif len(final_list) == 0 and my_message == True:
+						print("I am the only receiver in the path")
+					else:
+						for common_path in final_list:
+							sm.send_message(False, device, common_path[1], common_path[0], quality_list[0], quality_list[1], quality_list[2])
 				
 
 				# Helps identify the Route Request Packet
@@ -292,6 +296,7 @@ class RouteFormation:
 
 								print("Generating Reply")
 								self.SeqenceNo += 1
+
 								new_value = new_value[1:6]
 								new_value.append(self.myAddress)
 								print(new_value)
@@ -348,19 +353,23 @@ class RouteFormation:
 
 							if len(maintain_list) == 0:
 								maintain_list.append(string_val)
+								print(maintain_list)
 								Event().wait(10)	
 
-							if maintain_list[0][5] == maintain_list[1][5]:
-								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain_list[0][5]))
+							# this considers the case of two nodes
+							#if maintain_list[0][5] == maintain_list[1][5]:
+							#	remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain_list[0][5]))
+							#	print("Send Data - Path Set")
+								# First send the destination address and then send the message.
+							#	self.send_message(device, remote_device, maintain_list[0][6])
+							#else:
+							for maintain in maintain_list:
+								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maintain[5]))
+								print(maintain[5])
+								print(maintain[6])
 								print("Send Data - Path Set")
 								# First send the destination address and then send the message.
-								self.send_message(device, remote_device, maintain_list[0][6])
-							else:
-								for maintain in maintain_list:
-									remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (maitain[5]))
-									print("Send Data - Path Set")
-									# First send the destination address and then send the message.
-									self.send_message(device, remote_device, maintain[6])
+								self.send_message(device, remote_device, maintain[6])
 
 							
 						else:
@@ -381,7 +390,11 @@ def main():
 
 
 	# To open the Xbee device and to work with it
+<<<<<<< HEAD
+	device = XBeeDevice("/dev/ttyUSB2", 115200)
+=======
 	device = XBeeDevice("/dev/ttyS0", 115200)
+>>>>>>> 2b76a39dee6cf18a4e070b8c30e5afd9af868b7f
 	device.open()
 	print(device.get_power_level())
 
