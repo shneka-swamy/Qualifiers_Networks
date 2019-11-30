@@ -236,7 +236,8 @@ class RouteFormation:
 				# Once a request is got run a timer (must be added later)
 				elif string_val[0] == 'RREQ':
 						
-						flag = False
+						flag_inner = False
+						print(self.myAddress in string_val[7:])
 						if self.myAddress in string_val[7:]:
 							if string_val[6] == string_val[5]:
 								print("Leaving the packet coming directly from the source")
@@ -266,10 +267,10 @@ class RouteFormation:
 													new_value[i] = str(1)
 
 
-										flag = True
+										flag_inner = True
 
 
-								if flag == False:
+								if flag_inner == False:
 									self.interTable(string_val)
 									new_value = string_val.copy()
 
@@ -295,20 +296,29 @@ class RouteFormation:
 								new_value.append(self.myAddress)
 								print(new_value)
 								self.generateRREP(device, remote_device, new_value)
+						
 						else:
 							print("wait")
 							print(string_val)
-							str_val = string_val.copy()
-							self.interTable(str_val)
-							self.updateTable_request(device, string_val)
-							self.SeqenceNo += 1
-							string_val[6] = self.myAddress
-							string_val[4] = str(int(string_val[4]) + (self.neighbourcount - 1))
-							string_val[3] = str(int(string_val[3]) + 1)
-							print("Checking the values before sending")
-							print(self.inter_table)
-							device.send_data_broadcast(' '.join(string_val))
+							drop_flag = False
 
+							for list in self.inter_table:
+								if list[5] == string_val[5] and list[1] == string_val[1]:
+									print("Drop the package already received")
+									drop_flag = True
+
+							if drop_flag == False:
+								str_val = string_val.copy()
+								self.interTable(str_val)
+								self.updateTable_request(device, string_val)
+								self.SeqenceNo += 1
+							
+								string_val[6] = self.myAddress
+								string_val[4] = str(int(string_val[4]) + (self.neighbourcount - 1))
+								string_val[3] = str(int(string_val[3]) + 1)
+								print("Checking the values before sending")
+								print(self.inter_table)
+								device.send_data_broadcast(' '.join(string_val))
 
 				# When the value of the message received is 6 a reply message is received.
 				# Look at the intermediate table and send the message through the intermediate node.
@@ -386,7 +396,8 @@ def main():
 	# These steps are inherent to source node.
 	# print ("Press 'y' to declare as the source")	
 
-	rreq.declareSource(device, ['0013A20040B317F6', '0013A2004102FC76'])
+	#rreq.declareSource(device, ['0013A20040B317F6', '0013A2004102FC76'])
+	rreq.declareSource(device, ['0013A200419B587E'])
 	#rreq.declareSource(device, "0013A2004102FC76")
 	#rreq.declareSource(device, "0013A20040B31805")
 
