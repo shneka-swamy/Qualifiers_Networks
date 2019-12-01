@@ -313,7 +313,8 @@ class RouteFormation:
 								print(maintain_list[i])
 								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string(i))
 								print(str(remote_device))
-    							self.send_message(device, remote_device, maintain_list[i])
+								self.send_message(device, remote_device, maintain_list[i])
+
 					else:
 						str_val = string_val.copy()
 						self.updateTable_reply(str_val)
