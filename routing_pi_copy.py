@@ -86,7 +86,7 @@ class RouteFormation:
 		final_list = []
 
 		for value in self.table:
-			print(value[5]
+			print(value[5])
 
 			for destination in dest:
 				if(value[5] == destination):
@@ -245,6 +245,7 @@ class RouteFormation:
 						
 						flag_inner = False
 						print(self.myAddress in string_val[7:])
+						
 						if self.myAddress in string_val[7:]:
 							if string_val[6] == string_val[5]:
 								print("Leaving the packet coming directly from the source")
@@ -258,7 +259,7 @@ class RouteFormation:
 										change_flag = False
 										
 										if new_value[7:].count('1') < (string_val[7:].count('1') + 1):
-											if int(new_value[3]) >= int(string_val[3] - 1):
+											if int(new_value[3]) >= int(string_val[3]) - 1:
 												if (int(new_value[4]) > int(string_val[4])) and (int(new_value[2])) < (int(string_val[2])):
 													new_value = string_val.copy()
 													change_flag = True
@@ -284,9 +285,11 @@ class RouteFormation:
 									for i in range(7, len(string_val)):
 										if (new_value[i] == self.myAddress):
 											new_value[i] = str(1)
+											break
 
 									Event().wait(2)
 
+								print('Visited')
 								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (new_value[6]))
 								self.SeqenceNo += 1
 								# Add the source as destianation to the table
@@ -294,9 +297,12 @@ class RouteFormation:
 
 								# There are still destinations to be found
 								if new_value[7:].count('1') != len(new_value) - 7:
-									new_value[6] = self.myAddress
-									new_value[4] = str(int(new_value[4]) + (self.neighbourcount-1))
-									new_value[3] = str(int(new_value[3]) + 1)
+									
+									send_value = new_value.copy()
+
+									send_value[6] = self.myAddress
+									send_value[4] = str(int(new_value[4]) + (self.neighbourcount-1))
+									send_value[3] = str(int(new_value[3]) + 1)
 
 									device.send_data_broadcast(' '.join(new_value))
 
@@ -305,14 +311,16 @@ class RouteFormation:
 								print("Generating Reply")
 								self.SeqenceNo += 1
 
-								new_value[0] = 'RREP '
+								new_value[0] = 'RREP'
 								for i in range(1,5):
 									new_value[i] = new_value[i+1]
 
+								new_value = new_value[0:5]
 								new_value.append(self.myAddress)
 								new_value.append(self.myAddress)
 								print(new_value)
-								self.generateRREP(device, remote_device, new_value)
+								
+								#self.generateRREP(device, remote_device, new_value)
 						
 						else:
 							print("wait")
