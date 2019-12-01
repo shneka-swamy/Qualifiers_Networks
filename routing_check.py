@@ -300,7 +300,7 @@ class RouteFormation:
 								if val[5] in router:
 									temp = router[val[5]]
 									temp.append(string_val[-1])
-									router[val[5]] = temp
+									router[val[5]] = temp 
 								else:
 									router[val[5]] = [string_val[-1]]
 
@@ -328,14 +328,7 @@ class RouteFormation:
 							remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (remote_addr))
 							device.send_data(remote_device, ' '.join(string_val))
 
-
-
-
-
-
 def main():
-
-
 	# To open the Xbee device and to work with it
 
 	device = XBeeDevice("/dev/ttyUSB2", 115200)
