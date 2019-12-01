@@ -21,11 +21,11 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 	# this message is required at the realy side for processing
 	while True:
 		try:
-			msg = "MSG " + destination
-			device.send_data(remote_device, msg)
-			break
-		except (TimeoutException, XBeeException) as e:
-			time.sleep(0.1)
+				msg = "MSG " + destination
+				device.send_data(remote_device, msg)
+				break
+			except (TimeoutException, XBeeException) as e:
+				time.sleep(0.1)
 
 	print("Finished First Part")
 	dup_ratio = 0

@@ -174,8 +174,10 @@ class RouteFormation:
 
 		print("Waiting for data...\n")
 		flag = True
+		maintain_list = []
 
 		while flag:
+
 			xbee_message = device.read_data()
 
 			if xbee_message is not None:
@@ -285,7 +287,6 @@ class RouteFormation:
 
 				elif string_val[0] == 'RREP':
 
-					maintain_list = []
 					print("Processing Reply")
 					print(string_val)
 
@@ -293,11 +294,26 @@ class RouteFormation:
 						maintain_list.append(string_val)
 
 						if len(maintain_list) >= (len(string_val) - 7):
-							router = set()
+							router = {}
+					
 							for val in maintain_list:
-								router.add(val[5])
+								if val[5] in router:
+									temp = router[val[5]]
+									temp.append(string_val[-1])
+									router[val[5]] = temp
+								else:
+									router[val[5]] = [string_val[-1]]
+
+							print("Router")
 							print(router)	
 
+							# Send the message with destination to the routers
+							for i in maintain_list : 
+								print(i) 
+								print(maintain_list[i])
+								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string(i))
+								print(str(remote_device))
+    							self.send_message(device, remote_device, maintain_list[i])
 					else:
 						str_val = string_val.copy()
 						self.updateTable_reply(str_val)
