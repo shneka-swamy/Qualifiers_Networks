@@ -21,7 +21,7 @@ def send_message(isSource, device, remote_device, destination, dup, codec, initi
 	# this message is required at the realy side for processing
 	while True:
 		try:
-			msg = "MSG " + destination
+			msg = "MSG " + ' '.join(destination)
 			device.send_data(remote_device, msg)
 			break
 		except (TimeoutException, XBeeException) as e:

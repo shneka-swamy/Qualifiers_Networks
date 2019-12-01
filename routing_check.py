@@ -23,6 +23,7 @@ class RouteFormation:
 		self.rem = []
 		self.neighbourcount = 0
 		self.rrep = ""
+		self.no_dest = 0
 		self.myAddress = str(device.get_64bit_addr())
 
 	# <Sequence Number, Hop number, Degree, Source ID, Intermediate ID, Destination ID, Expiry Time>
@@ -92,6 +93,7 @@ class RouteFormation:
 		
 		degree = self.neighbourcount
 		self.Id += 1
+		self.no_dest = len(dest)
 
 		self.rreq += str('RREQ ') + str(self.Id) + ' ' + str(self.SeqenceNo) + ' ' + str(1) + ' ' + str(degree) + ' '
 		self.rreq += self.myAddress + ' ' + self.myAddress+ ' '
@@ -220,29 +222,34 @@ class RouteFormation:
 					
 					#To convert to original audio
 					sm.receive_message(new_list, int(quality_list[2]))
-
-					my_message = False
+					quality = qc.QualityCheck(float(quality_list[0]), float(quality_list[1]), int(quality_list[2]))
+					print(quality)
 
 					if self.myAddress in address:
-						
-						print("Message received at the receiver end")
-						# This is the actual audio quality data
-						print(quality_list)
-						qc.QualityCheck(float(quality_list[0]), float(quality_list[1]), int(quality_list[2]))
+						print("received at destination")
 						address.remove(self.myAddress)
-						my_message = True
 
-					# Check in the table and transfer the information 
-					final_list = self.search_table(address)
-					if len(final_list) == 0 and my_message == False:
-						print("Error in path")
-					elif len(final_list) == 0 and my_message == True:
-						print("I am the only receiver in the path")
-					else:
-						print(quality_list)
-						for common_path in final_list:
-							sm.send_message(False, device, common_path[1], common_path[0], float(quality_list[0]), float(quality_list[1]), int(quality_list[2]), new_list)
-				
+					if len(address) > 0:
+						inter_router = {}
+						if quality > 51:
+							for addr in address:
+								remote = self.	search_table(addr)
+								if remote in inter_router:
+									temp = inter_router[remote]
+									temp.append(addr)
+									inter_router[remote] = temp
+								else:
+									inter_router[remote] = [addr]
+						else:
+							print("Message dropped - Quality Error")
+
+						if len(inter_router) > 0:
+							for inter in inter_router:
+								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (inter))
+								sm.send_message(False, device, remote_device, inter_router[inter], float(quality_list[0]), int(quality_list[2]),float(quality_list[1]), new_list)
+
+
+					
 
 				# Helps identify the Route Request Packet
 				# Once a request is got run a timer (must be added later)
@@ -292,17 +299,20 @@ class RouteFormation:
 
 					if self.myAddress == string_val[4]:
 						maintain_list.append(string_val)
+						print("Maintain List", maintain_list)
 
-						if len(maintain_list) >= (len(string_val) - 7):
+						if len(maintain_list) >= self.no_dest:
 							router = {}
 					
 							for val in maintain_list:
 								if val[5] in router:
 									temp = router[val[5]]
-									temp.append(string_val[-1])
+									print(temp)
+									temp.append(val[-1])
+									print(temp)
 									router[val[5]] = temp 
 								else:
-									router[val[5]] = [string_val[-1]]
+									router[val[5]] = [val[-1]]
 
 							print("Router")
 							print(router)	
@@ -332,7 +342,7 @@ class RouteFormation:
 def main():
 	# To open the Xbee device and to work with it
 
-	device = XBeeDevice("/dev/ttyUSB2", 115200)
+	device = XBeeDevice("/dev/ttyUSB4", 115200)
 
 
 	device.open()
