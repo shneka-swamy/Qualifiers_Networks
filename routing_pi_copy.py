@@ -268,6 +268,9 @@ class RouteFormation:
 											if int(new_value[4]) > int(string_val[4]) and (int(new_value[2])) < (int(string_val[2])) :
 													new_value = string_val.copy()
 													change_flag = True
+
+										else:
+											print("Better option available")
 										
 										if change_flag == True:
 											for i in range(7, len(string_val)):
@@ -287,7 +290,6 @@ class RouteFormation:
 											new_value[i] = str(1)
 											break
 
-									Event().wait(2)
 
 								print('Visited')
 								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (new_value[6]))
@@ -311,15 +313,22 @@ class RouteFormation:
 								print("Generating Reply")
 								self.SeqenceNo += 1
 
-								new_value[0] = 'RREP'
-								for i in range(1,5):
-									new_value[i] = new_value[i+1]
+								reply_value = new_value.copy()
 
-								new_value = new_value[0:5]
-								new_value.append(self.myAddress)
-								new_value.append(self.myAddress)
-								print(new_value)
-								
+								reply_value[0] = 'RREP'
+								for i in range(1,5):
+									reply_value[i] = new_value[i+1]
+
+								reply_value = reply_value[0:5]
+								reply_value.append(self.myAddress)
+								reply_value.append(self.myAddress)
+								print("Printing Reply")
+								print(reply_value)
+
+								Event().wait(5)
+
+								device.send_data(remote_device, reply_value)
+
 								#self.generateRREP(device, remote_device, new_value)
 						
 						else:
@@ -411,7 +420,7 @@ def main():
 
 	# To open the Xbee device and to work with it
 
-	device = XBeeDevice("/dev/ttyUSB0", 115200)
+	device = XBeeDevice("/dev/ttyUSB1", 115200)
 
 
 	device.open()
