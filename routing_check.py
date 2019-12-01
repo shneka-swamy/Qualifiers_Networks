@@ -82,16 +82,11 @@ class RouteFormation:
 		print("Checking the values")
 		print(dest)
 
-		# Generate a list of list with the destination and the intermediate node
-		final_list = []
-
 		for value in self.table:
 			print(value[5])
-
-			for destination in dest:
-				if(value[5] == destination):
-					final_list.append([destination, value[4]])
-		return final_list
+			if(value[5] == destination):
+				value[4]
+		return 0
  
 	def generateRREQ(self, device, dest):
 		
@@ -303,6 +298,23 @@ class RouteFormation:
 								router.add(maintain_list[5])
 							print(router)	
 
+					else:
+						str_val = string_val.copy()
+						updateTable_reply(device,str_val)
+						string_val[5] = self.myAddress
+
+						remote_addr = self.search_table(string_val[6])
+
+						if remote_addr == 0:
+							print("Wrong Reply Path")
+						else:
+							print(remote_addr, string_val)
+							remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (remote_addr))
+							device.send_data(remote_device, string_val)
+
+
+
+
 
 
 def main():
@@ -310,7 +322,7 @@ def main():
 
 	# To open the Xbee device and to work with it
 
-	device = XBeeDevice("/dev/ttyUSB", 115200)
+	device = XBeeDevice("/dev/ttyUSB0", 115200)
 
 
 	device.open()
