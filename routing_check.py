@@ -308,12 +308,12 @@ class RouteFormation:
 							print(router)	
 
 							# Send the message with destination to the routers
-							for i in maintain_list : 
+							for i in router : 
 								print(i) 
-								print(maintain_list[i])
+								print(router[i])
 								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string(i))
 								print(str(remote_device))
-								self.send_message(device, remote_device, maintain_list[i])
+								self.send_message(device, remote_device, router[i])
 
 					else:
 						str_val = string_val.copy()
@@ -359,5 +359,6 @@ def main():
 
 if __name__ == "__main__":
 	main()
+
 
 
