@@ -83,9 +83,9 @@ class RouteFormation:
 		print(dest)
 
 		for value in self.table:
-			print(value[5])
-			if(value[5] == destination):
-				value[4]
+			print(value[5], value[4])
+			if(value[5] == dest):
+				return value[4]
 		return 0
  
 	def generateRREQ(self, device, dest):
@@ -154,7 +154,7 @@ class RouteFormation:
 
 		self.rrep += str('RREP ')+ str(self.SeqenceNo) + ' ' + message[3] + ' ' + message[4] + ' '
 		self.rrep += message[5] + ' ' + self.myAddress + ' '
-		self.rrep += message[7]
+		self.rrep += self.myAddress
 
 		device.send_data(remote_device, self.rrep)
 
@@ -295,22 +295,22 @@ class RouteFormation:
 						if len(maintain_list) >= (len(string_val) - 7):
 							router = set()
 							for val in maintain_list:
-								router.add(maintain_list[5])
+								router.add(val[5])
 							print(router)	
 
 					else:
 						str_val = string_val.copy()
-						updateTable_reply(device,str_val)
+						self.updateTable_reply(str_val)
 						string_val[5] = self.myAddress
 
-						remote_addr = self.search_table(string_val[6])
+						remote_addr = self.search_table(string_val[4])
 
 						if remote_addr == 0:
 							print("Wrong Reply Path")
 						else:
 							print(remote_addr, string_val)
 							remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (remote_addr))
-							device.send_data(remote_device, string_val)
+							device.send_data(remote_device, ' '.join(string_val))
 
 
 
@@ -322,7 +322,7 @@ def main():
 
 	# To open the Xbee device and to work with it
 
-	device = XBeeDevice("/dev/ttyUSB0", 115200)
+	device = XBeeDevice("/dev/ttyUSB2", 115200)
 
 
 	device.open()
