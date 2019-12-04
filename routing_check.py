@@ -3,6 +3,7 @@ import time
 from threading import Event
 import send_message as sm
 import Quality_check as qc
+import run_test1 as rt
 
 # Edit the code for multiple destiantions (can be implemented later)
 
@@ -187,6 +188,10 @@ class RouteFormation:
 				print("Printing received data")
 				print(string_val)
 
+				#if string_val[0] == 'PING':
+				#	remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string (string_val[1]))
+				#	device.send_data(remote_device, 'ACCEPT')
+
 				if string_val[0] == 'MSG':
 					address = string_val[1:]
 					print("information is received, Waiting for data:")
@@ -231,7 +236,7 @@ class RouteFormation:
 
 					if len(address) > 0:
 						inter_router = {}
-						if quality > 51:
+						if quality > 50:
 							for addr in address:
 								remote = self.	search_table(addr)
 								if remote in inter_router:
@@ -323,7 +328,9 @@ class RouteFormation:
 								print(router[i])
 								remote_device = RemoteXBeeDevice(device, XBee64BitAddress.from_hex_string(i))
 								print(str(remote_device))
-								self.send_message(device, remote_device, router[i])
+								# running the test function
+								rt.send_message_1(device, remote_device, router[i])
+								#self.send_message(device, remote_device, router[i])
 
 					else:
 						str_val = string_val.copy()

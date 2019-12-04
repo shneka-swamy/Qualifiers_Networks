@@ -41,3 +41,5 @@ def Injection_Rate(dupsetting, codec):
 	injectionRate = 64 * compression * (1+dupsetting)
 
 	return injectionRate
+
+
